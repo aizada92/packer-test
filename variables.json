@@ -3,6 +3,8 @@
     "ami_source_ami": "ami-0b8d323998f1e2d9c",
     "ami_instance_type": "m5.xlarge",
     "ami_ssh_username": "ec2-user",
+    "vpc_id": "",
+    "subnet_id": "",
 
     "ami_virtualization_type": "hvm",
     "source_ami_name": "CIS Amazon Linux 2 Benchmark v1.0.0.16 - Level 1*",
