@@ -1,0 +1,25 @@
+{
+    "ami_region": "us-east-1",
+    "ami_source_ami": "ami-0b8d323998f1e2d9c",
+    "ami_instance_type": "m5.xlarge",
+    "ami_ssh_username": "ec2-user",
+
+    "ami_virtualization_type": "hvm",
+    "source_ami_name": "CIS Amazon Linux 2 Benchmark v1.0.0.16 - Level 1*",
+    "ami_root_device_type": "ebs",
+    "ami_owners": "679593333241",
+
+    "provisioner_playbook_file_path":  "../../../playbooks/spark/playbook.yml also here you have to change",
+
+    "ami_tag_key1": "organization",
+    "ami_tag_value1": "put your company name or ",
+    "ami_tag_key2": "application",
+    "ami_tag_value2": "put your name ",
+    "ami_tag_key3": "environment",
+    "ami_tag_value3": "dev",
+    "ami_tag_key4": "provisioner",
+    "ami_tag_value4": "packer",
+    "ami_tag_key5": "description",
+    "ami_tag_value5": "spark-ami"
+
+}
