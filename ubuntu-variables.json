@@ -1,0 +1,26 @@
+{
+    "ami_region": "us-east-1",
+    "ami_source_ami": "ami-0f5ec3c019d8f026d",
+    "ami_instance_type": "m5.xlarge",
+    "ami_ssh_username": "ubuntu",
+    "vpc_id": "",
+    "subnet_id": "",
+    "ami_virtualization_type": "hvm",
+    "source_ami_name": "CIS Ubuntu Linux 18.04 LTS Benchmark v2.0.1.6 - Level 1*",
+    "ami_root_device_type": "ebs",
+    "ami_owners": "679593333241",
+
+    "provisioner_playbook_file_path":  "../../../playbooks/ubuntu-18.04lts/playbook.yml",
+
+    "ami_tag_key1": "organization",
+    "ami_tag_value1": "palig",
+    "ami_tag_key2": "application",
+    "ami_tag_value2": "tools",
+    "ami_tag_key3": "environment",
+    "ami_tag_value3": "prod",
+    "ami_tag_key4": "provisioner",
+    "ami_tag_value4": "packer",
+    "ami_tag_key5": "description",
+    "ami_tag_value5": "ubuntu-18.04"
+
+}
