@@ -1,0 +1,106 @@
+---
+- name: "Provision Spark Image"
+  hosts: default
+  become: true
+  become_method: sudo
+
+  tasks:
+
+##########################
+# PACKAGES Installation  #
+##########################
+  - name: ensure a list of packages installed
+    yum:
+      name: "{{ packages }}"
+    vars:
+      packages:
+      - unzip
+      - wget
+      - vim
+      - tmux
+
+#################################
+# CLOUDWATCH AGENT INSTALLATION #
+#################################
+  - name: Create /tmp directory for CloudWatch agent
+    file:
+      path: /tmp/cloudwatch-agent-installation
+      state: directory
+
+  - name: Download the CloudWatch Agent package
+    get_url:
+      url: https://s3.us-east-1.amazonaws.com/amazoncloudwatch-agent-us-east-1/amazon_linux/amd64/latest/amazon-cloudwatch-agent.rpm
+      dest: /tmp/cloudwatch-agent-installation
+
+  - name: Install the CloudWatch agent
+    yum:
+      name: /tmp/cloudwatch-agent-installation/amazon-cloudwatch-agent.rpm
+      state: present
+
+  - name: Remove the Agent file
+    file:
+      path: /tmp/cloudwatch-agent-installation/amazon-cloudwatch-agent.rpm
+      state: absent
+
+
+#####################
+# JAVA INSTALLATION #
+#####################
+
+  - name: Install Java
+    yum:
+      name: java-1.8.0-openjdk
+      state: present
+
+#######################
+# SPARK  INSTALLATION #
+#######################
+
+  - name: Unarchive a file that needs to be downloaded (added in 2.0)
+    unarchive:
+      src: http://archive.apache.org/dist/spark/spark-2.4.5/spark-2.4.5-bin-hadoop2.7.tgz
+      dest: /opt/
+      remote_src: yes
+
+  - name: Set the Spark Home ENV VARs
+    blockinfile:
+      path: ~/.bash_profile
+      block: |
+          export SPARK_HOME='/opt/spark-2.4.5-bin-hadoop2.7'
+          export PATH=$SPARK_HOME:$PATH
+          export PYTHONPATH=$SPARK_HOME/python:$PYTHONPATH
+
+######################
+# SCALA Installation #
+######################
+  - name: Download Scala rpm file.
+    get_url:
+      url: https://www.scala-lang.org/files/archive/scala-2.12.12.rpm
+      dest: /tmp
+      #mode: '0440'
+
+  - name: Install package.
+    yum:
+      name: /tmp/scala-2.12.12.rpm
+      state: present
+
+######################
+# KAFKA Installation #
+######################
+
+  - name: Unarchive a file that needs to be downloaded (added in 2.0)
+    unarchive:
+      src: https://archive.apache.org/dist/kafka/2.2.1/kafka_2.11-2.2.1.tgz
+      dest: /opt/
+      remote_src: yes
+
+##########################
+# CONFLUENT Installation #
+##########################
+
+  - name: Unarchive a file that needs to be downloaded (added in 2.0)
+    unarchive:
+      src: http://packages.confluent.io/archive/5.2/confluent-5.2.2-2.12.tar.gz
+      dest: /opt/
+      remote_src: yes
+
