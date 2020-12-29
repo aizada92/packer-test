@@ -1,0 +1,38 @@
+{
+  "builders": [{
+     "type": "amazon-ebs",
+     "region": "{{user `ami_region`}}",
+     "instance_type": "{{user `ami_instance_type`}}",
+     "ssh_username": "{{user `ami_ssh_username`}}",
+     "ami_name": "{{user `ami_tag_value2`}}-{{user `ami_tag_value3`}}-{{user `ami_tag_value5`}}-{{timestamp}}",
+     "vpc_id": "{{user `vpc_id`}}",
+     "subnet_id": "{{user `subnet_id`}}",
+     "source_ami_filter": 
+     {
+       "filters": 
+       {
+         "virtualization-type": "{{user `ami_virtualization_type`}}",
+         "name": "{{user `source_ami_name`}}",
+         "root-device-type": "{{user `ami_root_device_type`}}"
+       },
+       "owners": "{{user `ami_owners`}}",
+       "most_recent": true
+     },
+
+     "tags": {
+      "Name": "{{user `ami_tag_value2`}}-{{user `ami_tag_value3`}}-{{user `ami_tag_value5`}}",
+      "{{user `ami_tag_key1`}}": "{{user `ami_tag_value1`}}",
+      "{{user `ami_tag_key2`}}": "{{user `ami_tag_value2`}}",
+      "{{user `ami_tag_key3`}}": "{{user `ami_tag_value3`}}",
+      "{{user `ami_tag_key4`}}": "{{user `ami_tag_value4`}}",
+      "{{user `ami_tag_key5`}}": "{{user `ami_tag_value5`}}"
+    }
+  }
+  ],
+  "provisioners": [
+      {
+   "type": "ansible",
+   "playbook_file": "{{user `provisioner_playbook_file_path`}}"
+  }
+  ]
+}
