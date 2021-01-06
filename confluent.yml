@@ -1,0 +1,217 @@
+---
+- name: "Provision Confluent Image"
+  hosts: default
+  become: true
+  become_method: sudo
+
+  tasks:
+
+##########################
+# PACKAGES Installation  #
+##########################
+
+  - name: ensure a list of packages installed
+    yum:
+      name: "{{ packages }}"
+    vars:
+      packages:
+      - unzip
+      - wget
+      - vim
+      - tmux
+
+#######################
+# MCAFEE Installation #
+#######################
+  - name: Copy Mcafee package to the remote host
+    copy:
+      src: "../../packages/Linux5.6.4AgentPackages.zip"
+      dest: "/tmp"
+      owner: root
+      group: root
+      mode: 0644
+
+  - name: Unarchiving the 4AgentPackages on remote host
+    unarchive:
+      src: "/tmp/Linux5.6.4AgentPackages.zip"
+      dest: "/tmp"
+      remote_src: yes
+
+  - name: Install a .deb package
+    shell: bash /tmp/installrpm.sh -i
+
+########################
+# TENABLE Installation #
+########################
+  - name: Copy NessusAgent
+    copy:
+      src: "../../packages/NessusAgent-7.7.0-es5.x86_64.rpm"
+      dest: "/tmp"
+      owner: root
+      group: root
+      mode: 0644
+
+
+
+#################################
+# CLOUDWATCH AGENT INSTALLATION #
+#################################
+  - name: Create /tmp directory for CloudWatch agent
+    file:
+      path: /tmp/cloudwatch-agent-installation
+      state: directory
+
+  - name: Download the CloudWatch Agent package
+    get_url:
+      url: https://s3.us-east-1.amazonaws.com/amazoncloudwatch-agent-us-east-1/amazon_linux/amd64/latest/amazon-cloudwatch-agent.rpm
+      dest: /tmp/cloudwatch-agent-installation
+
+  - name: Install the CloudWatch agent
+    yum:
+      name: /tmp/cloudwatch-agent-installation/amazon-cloudwatch-agent.rpm
+      state: present
+
+  - name: Remove the Agent file
+    file:
+      path: /tmp/cloudwatch-agent-installation/amazon-cloudwatch-agent.rpm
+      state: absent
+
+#####################
+# JAVA INSTALLATION #
+#####################
+  - name: Install Java
+    yum:
+      name: java-1.8.0-openjdk
+      state: present
+
+##########################
+# CONFLUENT Installation #
+##########################
+
+  - name: Unarchive a file that needs to be downloaded (added in 2.0)
+    unarchive:
+      src: http://packages.confluent.io/archive/5.2/confluent-5.2.2-2.12.tar.gz
+      dest: /opt/
+      remote_src: yes
+
+########################################################
+# ONLY IF VERSION IS DIFFERENT: CONFLUENT INSTALLATION #
+########################################################
+
+  # - name: Ansible create file with content example
+  #   copy:
+  #     dest: "/etc/yum.repos.d/confluent.repo"
+  #     content: |
+  #       [Confluent.dist]
+  #       name=Confluent repository (dist)
+  #       baseurl=https://packages.confluent.io/rpm/5.2/7
+  #       gpgcheck=1
+  #       gpgkey=https://packages.confluent.io/rpm/5.2/archive.key
+  #       enabled=1
+
+  #       [Confluent]
+  #       name=Confluent repository
+  #       baseurl=https://packages.confluent.io/rpm/5.2
+  #       gpgcheck=1
+  #       gpgkey=https://packages.confluent.io/rpm/5.2/archive.key
+  #       enabled=1
+
+  # - name: Clean YUM cache
+  #   command: yum clean all
+
+  # - name: Install Confluent
+  #   yum:
+  #     name: confluent-platform-2.11
+  #     state: present
+
+##########################
+# Matte GUI Installation #
+##########################    
+
+  - name: update the system
+    yum:
+      name: "*"
+      state: latest
+
+
+
+  - name: Install Amazon Linux Extra Packages
+    command: amazon-linux-extras install epel mate-desktop1.x -y
+
+
+
+  - name: Installing packages needed for XRDP
+    yum:
+      name: "{{ packages }}"
+    vars:
+      packages:
+      - tigervnc-server
+      - openssl-devel
+      - pam-devel
+      - fuse-devel
+      - pixman-devel
+      - nasm
+      - libX11-devel
+      - libXfixes-devel
+      - libXrandr-devel
+      - Xserver
+      - marco
+      - xterm
+      - xorg-x11-drv-fbdev
+      - mate-themes
+      - xrdp
+      - xorgxrdp
+      - xorg-x11-xauth
+      - xorg-x11-fonts-*
+      - xorg-x11-utils
+      - gnome-shell
+      - gnome-session
+      - nautilus
+
+  - name: install the 'Development tools' package group
+    yum:
+      name: "@Development tools"
+      state: present
+
+  - name: Unarchive a file that needs to be downloaded (added in 2.0)
+    unarchive:
+      src: https://github.com/neutrinolabs/xrdp/releases/download/v0.9.11/xrdp-0.9.11.tar.gz
+      dest: /opt/
+      remote_src: yes
+
+  - name: Run configure commands
+    command: cd /opt/xrdp-0.9.11 && bash configure --prefix=/opt/xrdp --sysconfdir=/etc --enable-fuse --enable-pixman --enable-painter --with-systemdsystemunitdir=/usr/lib/systemd/system && make V=0 && make install
+
+  - name: Update mate-session file
+    command: bash -c 'echo PREFERRED=/usr/bin/mate-session > /etc/sysconfig/desktop'
+
+  - name: Block specific IP
+    iptables:
+      chain: INPUT
+      jump: ACCEPT
+      protocol: tcp
+      match: tcp
+      destination_port: 3389
+      comment: Accept incoming RDP connections
+    become: yes
+
+  - name: Comment out lines 181-188 in /etc/xrdp/xrdp.ini
+    command: sed -i '181,188 {s/^/#/}' /etc/xrdp/xrdp.ini
+
+  # - name: Add gnome word after Xsession in line number 77 of /etc/xrdp/startwm.sh
+  #   command: sed -i '77 s/\Xsession\b/& gnome/' /etc/xrdp/startwm.sh
+
+  - name: Just force systemd to reread configs (2.4 and above)
+    systemd:
+      daemon_reload: yes
+
+  - name: enable xrdp and ensure it is not masked
+    systemd:
+      name: xrdp
+      enabled: yes
+      masked: no
+
+  - name: Make sure a service is running
+    systemd:
+      state: started
+      name: xrdp
